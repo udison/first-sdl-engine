@@ -47,7 +47,7 @@ bool init()
     }
 
     // Creating a window
-    g_Window = SDL_CreateWindow("Engine", SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
+    g_Window = SDL_CreateWindow("Engine", SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_BORDERLESS);
     if (g_Window == NULL)
     {
         SDL_Log("SDL Window creation error: %s\n", SDL_GetError());
@@ -61,15 +61,29 @@ bool init()
 
 SDL_Surface* loadSurface(const char* path)
 {
+    // The final optimized image
+    SDL_Surface* optimizedSurface = NULL;
+    
     // Load image at provided path
     SDL_Surface* loadedSurface = SDL_LoadBMP(path);
-
     if (loadedSurface == NULL)
     {
         SDL_Log("Failed to load image at '%s': %s\n", path, SDL_GetError());
     }
+    else
+    {
+        // Convert surface to screen format
+        optimizedSurface = SDL_ConvertSurface(loadedSurface, g_Surface->format);
+        if (optimizedSurface == NULL)
+        {
+            SDL_Log("Failed to optimize image: %s\n", SDL_GetError());
+        }
 
-    return loadedSurface;
+        // Destroy old surface
+        SDL_DestroySurface(loadedSurface);
+    }
+
+    return optimizedSurface;
 }
 
 bool loadMedia()
@@ -158,8 +172,15 @@ int main(int argc, char* args[])
             }
         }
 
+        // Stretch the image about to show to window size
+        SDL_Rect stretchRect;
+        stretchRect.x = 0;
+        stretchRect.y = 0;
+        stretchRect.w = SCREEN_WIDTH;
+        stretchRect.h = SCREEN_HEIGHT;
+
         // Show the image
-        SDL_BlitSurface(g_CurrentSurface, NULL, g_Surface, NULL);
+        SDL_BlitSurfaceScaled(g_CurrentSurface, NULL, g_Surface, &stretchRect, SDL_SCALEMODE_NEAREST);
 
         // Update the surface after all frame changes
         SDL_UpdateWindowSurface(g_Window);
