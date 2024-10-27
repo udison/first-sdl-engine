@@ -5,7 +5,8 @@
  */
 
 //Using SDL and standard IO
-#include <SDL.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
 #include <stdio.h>
 
 //Screen dimension constants
@@ -24,17 +25,17 @@ SDL_Surface* g_HelloWorld = NULL;
 bool init()
 {
     // Initializing SDL
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    if (!SDL_Init(SDL_INIT_VIDEO))
     {
-        printf("SDL initialization error: %s\n", SDL_GetError());
+        SDL_Log("SDL initialization error: %s\n", SDL_GetError());
         return false;
     }
 
     // Creating a window
-    g_Window = SDL_CreateWindow("Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    g_Window = SDL_CreateWindow("Engine", SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
     if (g_Window == NULL)
     {
-        printf("SDL Window creation error: %s\n", SDL_GetError());
+        SDL_Log("SDL Window creation error: %s\n", SDL_GetError());
         return false;
     }
 
@@ -65,7 +66,7 @@ bool loadMedia()
 void close()
 {
     // Deallocate surface
-    SDL_FreeSurface(g_HelloWorld);
+    SDL_DestroySurface(g_HelloWorld);
     g_HelloWorld = NULL;
 
     // Deallocate window
@@ -91,7 +92,16 @@ int main(int argc, char* args[])
 
     // Update the surface after all frame changes
     SDL_UpdateWindowSurface(g_Window);
-    SDL_Event e; bool quit = false; while (!quit) { while (SDL_PollEvent(&e)) { if (e.type == SDL_QUIT) quit = true; } }
+    
+    bool quit = false;
+    SDL_Event e;
+    while (!quit)
+    {
+        while (SDL_PollEvent(&e))
+        {
+            if (e.type == SDL_EVENT_QUIT) quit = true;
+        }
+    }
     
     close();
     return 0;
