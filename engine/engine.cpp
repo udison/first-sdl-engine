@@ -45,16 +45,34 @@ bool init()
 
 bool loadMedia()
 {
-    SDL_FillRect(g_Surface, NULL, SDL_MapRGB(g_Surface->format, 0xFF, 0xFF, 0xFF)); // paints the window white
-    SDL_UpdateWindowSurface(g_Window); // update its surface in order to show thing that were drawn
-    SDL_Event e; bool quit = false; while (!quit) { while (SDL_PollEvent(&e)) { if (e.type == SDL_QUIT) quit = true; } } // forces the window to stay open
+    bool success = true;
 
-    return true;
+    // Load the image
+    const char* path = "resources/images/test01.bmp";
+    g_HelloWorld = SDL_LoadBMP(path);
+    if (g_HelloWorld == NULL)
+    {
+        printf("Failed to load image at '%s': %s\n", path, SDL_GetError());
+        success = false;
+    }
+
+    // Show the image
+    SDL_BlitSurface(g_HelloWorld, NULL, g_Surface, NULL);
+    
+    return success;
 }
 
 void close()
 {
+    // Deallocate surface
+    SDL_FreeSurface(g_HelloWorld);
+    g_HelloWorld = NULL;
+
+    // Deallocate window
     SDL_DestroyWindow(g_Window);
+    g_Window = NULL;
+
+    // Closes SDLs subsystems
     SDL_Quit();
 }
 
@@ -65,7 +83,15 @@ int main(int argc, char* args[])
         return 1;
     }
     
-    loadMedia();
+    if (!loadMedia())
+    {
+        printf("Failed to load media!\n");
+        return 1;
+    }
+
+    // Update the surface after all frame changes
+    SDL_UpdateWindowSurface(g_Window);
+    SDL_Event e; bool quit = false; while (!quit) { while (SDL_PollEvent(&e)) { if (e.type == SDL_QUIT) quit = true; } }
     
     close();
     return 0;
